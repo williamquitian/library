@@ -1,0 +1,139 @@
+<a class="btn btn-success bt-sm" href="{% url 'new_transfer_package' client.id %}">
+  <i class="bi bi-coin"></i> Nuevo Envío
+</a> 
+
+ {% if client.get_sendmoney_count_month %}
+  &nbsp; &nbsp;
+  <span class="badge text-bg-warning" style="font-size:1.10em;">
+    {{client.get_sendmoney_count_month}} envío{% if client.get_sendmoney_count_month > 1 %}s{% endif %} en el último mes suman ${{client.get_sendmoney_sum_month}}
+  </span>
+ {% endif %}
+
+ <br><br>
+<table class="table table-hover table-bordered caption-top">
+  <h4>Envío de dinero</h4>
+  <thead class="table-light">
+    <tr>
+      <th scope="col">Valor</th>
+      <th scope="col"># Envío</th>
+      <th scope="col">Metodo</th>
+      <th scope="col">País</th>
+      <th scope="col">Empresa</th>
+      <th scope="col">Tarjeta</th>
+      <th scope="col">Fecha</th>
+      <th scope="col">Creado por</th>
+      <th scope="col"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for sm in sendmoney %}
+    <tr>
+      <td>$ {{ sm.amount | floatformat:-2 }}</td>
+      {% if sm.broker_number == 0 %}
+        <td align="center">-</td>
+      {% else %}
+        <td>{{ sm.broker_number }}</td>
+      {% endif %}
+      <td>{{ sm.get_payment_method_display }}</td>
+      <td>{{ sm.country }}</td>
+      <td>{{ sm.broker }}</td>
+      <td>{{ sm.fidelitycard }}</td>
+      <td>{{ sm.creation_date }}</td>
+      <td>{{ sm.author }}</td>
+      <td align="center">
+        {% if sm.allow_delete and request.user == sm.author %}
+          <a href="#" 
+            class="btn btn-danger btn-sm" 
+            title="Eliminar envío" 
+            data-bs-toggle="modal" 
+            data-bs-target="#confirmationModal" 
+            data-action-url="{% url 'delete_sendmoney' sm.id %}"
+            data-broker_number="{{ sm.broker_number }}" 
+            data-amount="{{ sm.amount }}"
+            data-broker="{{ sm.broker }}">
+            <i class="bi bi-trash"></i>
+          </a>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="8">Sin envíos de dinero.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<table class="table table-hover table-bordered caption-top">
+  <h4>Envío de paquetes</h4>
+  <thead class="table-light ">
+    <tr>
+      <th scope="col">Peso</th>
+      <th scope="col">Tamaño</th>
+      <th scope="col">País</th>
+      <th scope="col">Empresa</th>
+      <th scope="col">Fecha</th>
+      <th scope="col">Creado por</th>
+
+    </tr>
+  </thead>
+  <tbody>
+    {% for sp in sendpackage %}
+    <tr>
+      <td>
+        {% if sp.weight %}
+        {{ sp.weight | floatformat:-1}} lb
+        {% endif %}
+      </td>
+      <td>
+        {% if sp.size_length %}
+          {{ sp.size_length | floatformat:-1}} in Largo <b>x</b>
+          {{ sp.size_width | floatformat:-1}} in Ancho <b>x</b>
+          {{ sp.size_heigth | floatformat:-1}} in Alto
+        {% endif %}
+      </td>
+      <td>{{ sp.country }}</td>
+      <td>{{ sp.shipper }}</td>
+      <td>{{ sp.creation_date }}</td>
+      <td>{{ sp.author }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="6">Sin envío de paquetes.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmationModalLabel">Confirmar eliminación </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Esta seguro que quiere eliminar el envío <strong id="modal-broker_number"></strong> por valor de<br> 
+        <strong id="modal-amount"></strong> y empresa <strong id="modal-broker"></strong>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <a href="#" id="confirmActionLink" class="btn btn-primary">Confirmar</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    // The Bootstrap modal event uses the jQuery 'on' syntax
+    $('#confirmationModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); 
+        var modal = $(this);
+        modal.find('#modal-broker_number').text('#' + button.data('broker_number'));
+        modal.find('#modal-amount').text('$' + button.data('amount'));
+        modal.find('#modal-broker').text(button.data('broker'));
+        modal.find('#confirmActionLink').attr('href', button.data('action-url'));
+    });
+});
+</script>

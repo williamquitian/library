@@ -1,0 +1,143 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+<div class="row">
+    <div class="col">
+        <h2 style="display:inline">Clientes</h2>
+    </div>
+    <div class="col-auto">
+        <a class="btn btn-primary bt-sm" href="{% url 'create_client' %}">
+            <i class="bi bi-plus-circle"></i> Crear nuevo cliente
+        </a>
+
+    </div>
+</div>
+<hr>
+
+<table id="clients_table" class="table table-hover table-bordered small">
+    <thead class="table-light">
+        <tr>
+            <th rowspan="2" class="dt-head-center">Nombre</th>
+            <th rowspan="2" class="dt-head-center">Teléfono</th>
+            <th rowspan="2" class="dt-head-center">País</th>
+            <th rowspan="2" class="dt-head-center">Fecha de <br> Nacimiento</th>
+            <th rowspan="2" class="dt-head-center"># Doc</th>
+            <th colspan="2" class="dt-head-center" data-dt-order="disable">Money order<br> 30 días</th>
+            <th colspan="2" class="dt-head-center" data-dt-order="disable">Envío dinero<br> 30 días</th>
+            <th rowspan="2" class="dt-head-center">Último<br>envío</th>
+        </tr>
+        <tr>
+            <th>Ctd</th>
+            <th>Total</th>
+            <th>Ctd</th>
+            <th>Total</th>
+        </tr>
+        <tr id="row_filters" style="display:none;">
+            <th data-dt-order="disable" style="padding: 1px 1px;"><input placeholder="Filtrar Nombre" class="form-control form-control-sm"></th>
+            <th data-dt-order="disable" style="padding: 1px 1px;"><input placeholder="Filtrar Teléfono" class="form-control form-control-sm"></th>
+            <th data-dt-order="disable" style="padding: 1px 1px;"><input placeholder="Filtrar País" class="form-control form-control-sm"></th>
+            <th data-dt-order="disable" style="padding: 1px 1px;"><input placeholder="Filtrar Fecha de Nacimiento" class="form-control form-control-sm"></th>
+            <th data-dt-order="disable" style="padding: 1px 1px;"></th>
+            <th data-dt-order="disable" style="padding: 1px 1px;"></th>
+            <th data-dt-order="disable" style="padding: 1px 1px;"></th>
+            <th data-dt-order="disable" style="padding: 1px 1px;"></th>
+            <th data-dt-order="disable" style="padding: 1px 1px;"></th>
+            <th data-dt-order="disable" style="padding: 1px 1px;"><input placeholder="Filtrar Último envío" class="form-control form-control-sm"></th>
+        </tr>
+    </thead>
+</table>
+<br>
+<script>
+    var table = new DataTable('#clients_table', {
+        responsive: true,
+        stateSave: true,
+        stateLoaded: function (settings, callback) {
+            var o;
+
+            try {
+                o = JSON.parse(localStorage.getItem('DataTables_' + settings.sInstance + '_' + window.location.pathname));
+            } catch (e) {
+                return null;
+            }
+            if (o && o.columns) {
+                o.columns.forEach(function (column, i) {
+                    if (column.search.search) {
+                        var headerCell = $('#clients_table #row_filters th').eq(i);
+                        if (headerCell.find('input').length > 0) {
+                            headerCell.find('input').val(column.search.search);
+                        }
+                    }
+                });
+            }
+        },
+        columns: [
+            {
+                data: 'name', "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
+                    $(nTd).html("<a href='/clients/view_client/" + oData.id + "/packages'>" + oData.name + "</a>");
+                }
+            },
+            { data: 'phone' },
+            { data: 'country__name' },
+            { data: 'date_of_birth' },
+            { data: 'doc_count' },
+            { data: 'count_mo' },
+            { data: 'sum_mo' },
+            { data: 'count_sm' },
+            { data: 'sum_sm' },
+            { data: 'last_sm_date' },
+        ],
+        ajax: "{% url 'list_clients_ajax' %}",
+        layout: {
+            bottomEnd: {
+                paging: {
+                    buttons: 5
+                }
+            },
+            topStart: {
+                info: {
+                    text: 'Mostrando del _START_ al _END_ de _TOTAL_ clientes'
+                }
+            },
+            bottomStart: {
+                pageLength: {
+                    menu: [10, 25, 50],
+                    text: 'Mostar _MENU_ registros por página'
+                }
+            }
+        },
+        language: {
+            infoEmpty: 'No hay clientes creados',
+            infoFiltered: '(filtrados de _MAX_ clientes totales)',
+            zeroRecords: 'Cliente no encontrado'
+        },
+    });
+
+    $(document).ready(function () {
+        $('#clients_table #row_filters th').each(function (i) {
+            $('input', this).on('keyup change', function (ev) {
+                if (table.column(i).search() !== this.value && (ev.keyCode == 13 || ev.keyCode == 8)) {
+                    table.column(i).search(this.value).draw();
+                }
+            });
+        });
+    });
+
+    $('#clients_table').on('draw.dt', function () {
+        setTimeout(function () { $("#row_filters").show(); }, 100);
+    });
+
+    table.on('click', 'tbody tr', function () {
+        url = $(this).find("td:first a").attr("href")
+        $(location).attr('href', url);
+    });
+</script>
+<style>
+    thead input {
+        width: 100%;
+        padding: 0px;
+        box-sizing: border-box;
+    }
+    .dataTable>tbody>tr{
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

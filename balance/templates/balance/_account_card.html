@@ -1,0 +1,107 @@
+{% load custom_filters %}
+{% comment %}
+Tarjeta vertical de una cuenta. `row` viene de balance.services._build_row.
+`row.editable` decide si se muestran los inputs del cajero o solo las cifras: en
+la vista diaria las cuentas manuales se digitan y las automáticas no.
+Una cuenta manual no se cuadra contra la empresa, así que no lleva las filas de
+"Balance final empresa" ni "Diferencia".
+{% endcomment %}
+<div class="col">
+  <div class="card h-100 shadow-sm">
+    <div class="card-header py-1 d-flex justify-content-between align-items-center
+                {% if row.difference and row.difference != 0 %}bg-danger-subtle{% else %}bg-light{% endif %}">
+      <strong class="text-uppercase small">{{ row.account.name }}</strong>
+      {% if row.is_manual %}<span class="badge text-bg-secondary">Manual</span>{% endif %}
+    </div>
+
+    <table class="table table-sm mb-0 small">
+      <tbody>
+        <tr>
+          <td>Balance inicial</td>
+          <td class="text-end" style="width:45%">
+            {% if row.editable %}{{ row.form.initial_balance }}
+            {% else %}{{ row.initial|currency|default_if_none:"$0.00" }}{% endif %}
+          </td>
+        </tr>
+
+        {% if row.is_manual %}
+        {# Sin transacciones en el CRM: el cajero digita la venta del día. #}
+        <tr>
+          <td>Movimiento del día</td>
+          <td class="text-end">
+            {% if row.editable %}{{ row.form.manual_movement }}
+            {% else %}{{ row.manual_movement|currency|default_if_none:"$0.00" }}{% endif %}
+          </td>
+        </tr>
+        {% endif %}
+
+        {% if not row.is_manual %}
+        <tr>
+          <td>Envíos en efectivo</td>
+          <td class="text-end">{{ row.send_money_cash|currency|default_if_none:"$0.00" }}</td>
+        </tr>
+        <tr>
+          <td>Money orders</td>
+          <td class="text-end">{{ row.money_order|currency|default_if_none:"$0.00" }}</td>
+        </tr>
+        <tr>
+          <td>Cheques</td>
+          <td class="text-end">{{ row.checks|currency|default_if_none:"$0.00" }}</td>
+        </tr>
+        {% endif %}
+
+        <tr>
+          <td>Salidas / depósitos</td>
+          <td class="text-end">{{ row.outflows|currency|default_if_none:"$0.00" }}</td>
+        </tr>
+        {% if row.inflows %}
+        <tr>
+          <td>Recibido en traslados</td>
+          <td class="text-end">{{ row.inflows|currency|default_if_none:"$0.00" }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+
+      <tfoot class="table-light">
+        <tr>
+          <th>Balance final cash</th>
+          <th class="text-end">{{ row.final_cash|currency|default_if_none:"$0.00" }}</th>
+        </tr>
+        {% if not row.is_manual %}
+        <tr>
+          <td>Balance final empresa</td>
+          <td class="text-end">
+            {% if row.editable %}{{ row.form.company_balance }}
+            {% else %}{{ row.company_balance|currency|default_if_none:"—" }}{% endif %}
+          </td>
+        </tr>
+        <tr class="{% if row.difference and row.difference != 0 %}table-danger{% endif %}">
+          <th>Diferencia</th>
+          <th class="text-end">{{ row.difference|currency|default_if_none:"—" }}</th>
+        </tr>
+        {% endif %}
+      </tfoot>
+    </table>
+
+    {% if not row.is_manual %}
+      {% if row.send_money_cashless or row.checks_commission %}
+      {% comment %}
+      Memos: el dinero de tarjeta y ViaLink no pasó por el cajón, y el balance
+      usa el cheque bruto, así que la comisión tampoco suma.
+      {% endcomment %}
+      <div class="card-footer py-1 small text-muted">
+        {% if row.send_money_card %}
+        <div>Envíos con tarjeta: {{ row.send_money_card|currency }}</div>
+        {% endif %}
+        {% if row.send_money_vialink %}
+        <div>Envíos ViaLink: {{ row.send_money_vialink|currency }}</div>
+        {% endif %}
+        {% if row.checks_commission %}
+        <div>Comisión cheques: {{ row.checks_commission|currency }}</div>
+        {% endif %}
+        <em>No entran en el balance de caja.</em>
+      </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>

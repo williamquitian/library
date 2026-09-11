@@ -1,0 +1,134 @@
+{% extends 'accounts/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<body>
+    <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'clients-list'%}">Clientes</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'view_client' client.id 'packages' %}">{{client}}</a></li>
+            <li class="breadcrumb-item active">Nuevo envío</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-sm-6 mb-3 mb-sm-0">
+            <div class="card border-secondary">
+                <div class="card-header">Enviar dinero</div>
+                <div class="card-body">
+                    <form method="post" id="sendmoneyform" action="{% url 'new_transfer_package' client.id %}">
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert" id="alert_form"
+                            style="display: none">
+                            <ul class="m-0"> </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% csrf_token %}
+                        {% crispy sendmoney_form %}
+                    </form>
+                </div>
+                <div class="card-footer text-end">
+                    <a class="btn btn-outline-danger" href="{% url 'view_client' client.id 'packages' %}"> Cancelar </a>
+                    <button type="button" id="buttonsendmoneyform" name="submit-money" class="btn btn-primary"> Guardar </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 mb-3 mb-sm-0">
+            <div class="card border-secondary">
+                <div class="card-header">Enviar paquete</div>
+                <div class="card-body">
+                    <form method="post" id="sendpackageform" action="{% url 'new_transfer_package' client.id %}">
+                        {% csrf_token %}
+                        {% crispy sendpackage_form %}
+                    </form>
+                </div>
+                <div class="card-footer text-end">
+                    <a class="btn btn-outline-danger" href="{% url 'view_client' client.id 'packages' %}"> Cancelar </a>
+                    <button type="submit" form="sendpackageform" name="submit-package" class="btn btn-primary"> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmSendMoneyForm" tabindex="-1" aria-labelledby="confirmLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmLabel">Confirmar Envío</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to submit this form?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="modalConfirmBtn">Si, Confirmo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    $(document).ready(function () {
+        if ($('#id_Money-fidelitycard').val() === '0') {
+            $('#div_row_id_Money-new_card').show();
+        } else {
+            $('#div_row_id_Money-new_card').hide();
+        }
+
+        $('#id_Money-fidelitycard').on('change', function () {
+            if ($(this).val() === '0') {
+                $('#div_row_id_Money-new_card').show();
+            } else {
+                $('#div_row_id_Money-new_card').hide();
+            }
+        });
+
+        var confirmModal = new bootstrap.Modal($('#confirmSendMoneyForm')[0]);
+        var sum_sendmoney = parseFloat('{{ client.get_sendmoney_sum_month }}');
+        var count_docs = parseInt('{{ client.documents.count }}');
+
+        if (sum_sendmoney >= 4000)
+            $("#alert_form > ul").append("<li>Este cliente ha hecho envíos este mes por mas de $3000</li>");
+        $("#alert_form").show();
+
+        if (count_docs == 0)
+            $("#alert_form > ul").append("<li>Este cliente aún no tiene documentos adjuntos</li>");
+        $("#alert_form").show();
+
+
+        $('#buttonsendmoneyform').on('click', function () {
+            if (sum_sendmoney + parseFloat($('#id_Money-amount').val()) >= 4500 && count_docs == 0) {
+                $('#confirmSendMoneyForm .modal-body').html(
+                    "Este cliente ha hecho envíos por mas de $4500 " +
+                    "y no tiene documentos agregados.<br><br>" +
+                    "<b>¿Quiere continuar?</b>"
+                );
+                confirmModal.show();
+            } else if (sum_sendmoney + parseFloat($('#id_Money-amount').val()) >= 4000) {
+                $('#confirmSendMoneyForm .modal-body').html(
+                    "Este cliente ha hecho envíos por mas de $4500.<br><br>" +
+                    "<b>¿Quiere continuar?</b>"
+                );
+                confirmModal.show();
+            }else{
+                $('#sendmoneyform').submit();
+            }
+        });
+
+        $('#modalConfirmBtn').on('click', function () {
+            confirmModal.hide();
+            $('#sendmoneyform').submit();
+        });
+    });
+    $('[id^=id_Package-size]').change(function () {
+        length = $("#id_Package-size_length").val();
+        heigth = $("#id_Package-size_heigth").val();
+        width = $("#id_Package-size_width").val();
+
+        if ($.isNumeric(length) && $.isNumeric(heigth) && $.isNumeric(width)) {
+            $("#volume").text("(" + length + " X " + heigth + " X " + width + ") / 166 = " + ((length * heigth * width) / 166).toFixed(2))
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'accounts/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<body>
+    <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'clients-list'%}">Clientes</a></li>
+            <li class="breadcrumb-item active">Agregar documento</li>
+        </ol>
+    </nav>
+
+    <h3>Agregar documento</h3>
+    <p><mark>{{client}}</mark></p>
+    <hr>
+    <form method="post" action="{% url 'mobile_upload_document' client.id %}" onsubmit="showLoading()"
+        enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ document_form|crispy }}
+        <div class="col text-end">
+            <a class="btn btn-outline-danger" href="{% url 'mobile_search_client' %}"> Cancelar </a>
+            <button type="submit" class="btn btn-primary">
+                <span>Agregar documento</span>
+                <span class="loading-indicator" style="display: none;">Subiendo...</span>
+            </button>
+        </div>
+    </form>
+    <br>
+    {% if client.documents.all %}
+    <table class="table table-bordered table-hover bg-white">
+        <thead class="table-light">
+            <tr>
+                <th>Documento</th>
+                <th>Creado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in client.documents.all %}
+            <tr>
+                <td>{{ doc.get_document_type_display }}</td>
+                <td>{{ doc.creation_date|date:"m/d/Y H:i"  }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</body>
+<script>
+    function showLoading() {
+        document.querySelector('button[type="submit"] > span:first-child').style.display = 'none';
+        document.querySelector('.loading-indicator').style.display = 'inline-block';
+        document.querySelector('button[type="submit"]').disabled = true;
+    }
+    /* $('#id_due_date').on("change", function() {
+     this.setAttribute(
+         "data-date",
+         moment(this.value, "YYYY-MM-DD")
+             .format( this.getAttribute("data-date-format") )
+     )
+ }).trigger("change")*/
+
+</script>
+{% endblock %}

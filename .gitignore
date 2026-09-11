@@ -1,0 +1,19 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Django local settings & secrets
+.env
+local_settings.py
+
+# Compiled Python files
+*.pyc
+__pycache__/
+
+# Database (Do not push your local database)
+*.sqlite3
+
+# Media and static deployment files
+/media/
+/staticfiles/

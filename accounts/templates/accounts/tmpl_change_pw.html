@@ -1,0 +1,21 @@
+{% extends 'accounts//base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="row">
+    <div class="col-sm-6 offset-md-3">
+        <div class="card">
+            <div class="card-header">Cambiar Contraseña</div>
+            <div class="card-body">
+                <form method="post" id="account_new_form" class="row g-3" novalidate>
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                </form>
+            </div>
+            <div class="card-footer text-end">
+                <a class="btn btn-outline-danger" href="{% url 'clients-list' %}"> Cancelar </a>
+                <button type="submit" form="account_new_form" class="btn btn-success"> Cambiar Password </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

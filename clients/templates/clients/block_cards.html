@@ -1,0 +1,28 @@
+<div class="row">
+    <div class="col-sm-6 offset-md-3">
+<table class="table table-hover table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th scope="col">Tarjeta</th>
+            <th scope="col">Envíos</th>
+            <th scope="col">Fecha creación</th>
+            <th scope="col">Creado por </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for fc in fidelitycards %}
+        <tr>
+            <td>{{ fc }}</td>
+            <td>{{ fc.count }}</td>
+            <td>{{ fc.created_at | default_if_none:""}}</td>
+            <td>{{ fc.author }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">Sin Money Orders.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+</div>

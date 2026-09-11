@@ -1,0 +1,74 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+
+<div class="row">
+    <div class="col">
+        <h2 style="display:inline">Empresas de Unimex CRM</h2>
+    </div>
+    <div class="col-auto">
+        <a class="btn btn-success bt-sm" href="{% url 'companies-create' %}">
+            <i class="bi bi-building-add"></i> Nueva empresa
+        </a>
+
+    </div>
+</div>
+<hr>
+
+<table id="companies_table" class="table table-hover table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th>Nombre</th>
+            <th>Número de cuenta</th>
+            <th>Ciudad</th>
+            <th>Comment</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in companies %}
+        {% if c.color == "green" %}
+        <tr class="clickable-row" data-id="{{ c.id }}" style="cursor: pointer;">
+            {% elif c.color == "yellow" %}
+        <tr class="clickable-row table-warning" data-id="{{ c.id }}" style="cursor: pointer;">
+            {% elif c.color == "red" %}
+        <tr class="clickable-row table-danger" data-id="{{ c.id }}" style="cursor: pointer;">
+            {% endif %}
+
+            <td><b>{{ c.name }}</b></td>
+            <td> {{ c.account_number|default_if_none:"" }} </td>
+            <td>{{ c.city|default_if_none:"" }}</td>
+            <td>{{ c.comment|default_if_none:"" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+    new DataTable('#companies_table', {
+        stateSave: true,
+        layout: {
+            topStart: {
+                info: {
+                    text: 'Mostrando del _START_ al _END_ de _TOTAL_ clientes'
+                }
+            },
+            bottomStart: {
+                pageLength: {
+                    menu: [10, 25, 50],
+                    text: 'Mostar _MENU_ registros por página'
+                }
+            }
+        },
+        language: {
+            infoEmpty: 'No hay clientes creados',
+            infoFiltered: '(filtrados de _MAX_ clientes totales)',
+            zeroRecords: 'Cliente no encontrado',
+            search: "Buscar empresa:"
+        }
+    });
+
+    $('#companies_table tbody').on('click', 'tr', function () {
+        var rowId = $(this).data('id');
+        window.location.href = "/companies/edit/" + rowId;
+    });
+</script>
+{% endblock %}

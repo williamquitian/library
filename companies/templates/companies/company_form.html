@@ -1,0 +1,177 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+{% load crispy_forms_tags %}
+
+<body>
+    {{ form.media.css }}
+    <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'companies-list'%}">Empresas</a></li>
+            <li class="breadcrumb-item active">
+                {% if form.instance.pk %}
+                Modificar empresa
+                {% else %}
+                Nueva empresa
+                {% endif %}
+            </li>
+        </ol>
+    </nav>
+    <div class="row">
+        <div class="col-sm-10 offset-md-1">
+            <div class="card">
+                <h5 class="card-header">
+                    {% if form.instance.pk %}
+                    Modificar empresa <mark>{{form.instance.name}}</mark>
+                    {% else %}
+                    Nueva empresa
+                    {% endif %}
+                </h5>
+                {{ form.media }}
+                <div class="card-body">
+                    <form method="post" id="checkform" class="row g-3" novalidate>
+                        {% csrf_token %}
+                        <div class="col-md-4"> {{ form.name|as_crispy_field }} </div>
+                        <div class="col-md-4"> {{ form.account_number|as_crispy_field }} </div>
+                        <div class="col-md-4"> {{ form.city|as_crispy_field }} </div>
+                        <div class="col-md-4">
+                            <div class="mb-2">
+                                {{ form.color.label_tag }}
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                {% for radio in form.color %}
+
+                                {{ radio.tag }} <!-- The <input> -->
+                                <label for="{{ radio.id_for_label }}" class="color-box bg-{{ radio.data.value }}">
+                                    {{ radio.choice_label }}
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-8"> {{ form.comment|as_crispy_field }} </div>
+                    </form>
+                    {% if checks%}
+                    <div class="card">
+                        <div class="card-header">
+                            <b>Cheques cambiados para esta empresa</b>
+                        </div>
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Cliente</th>
+                                    <th scope="col">Valor</th>
+                                    <th scope="col">No. Cheque</th>
+                                    <th scope="col">fecha</th>
+                                    <th scope="col">Pagador</th>
+                                    <th scope="col">Contacto</th>
+                                    <th scope="col">Teléfono</th>
+                                    <th scope="col">Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for check in checks %}
+                                <tr>
+                                    <td>{{ check.client }}</td>
+                                    <td>${{ check.amount }}</td>
+                                    <td>{{ check.check_number }}</td>
+                                    <td>{{ check.created_at | date:"SHORT_DATETIME_FORMAT" }}</td>
+                                    <td>{{ check.broker }}</td>
+                                    <td>{{ check.manager }}</td>
+                                    <td>{{ check.manager.phone }}</td>
+                                    <td>{{ check.author }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer text-end">
+                    <a class="btn btn-outline-danger" href="{% url 'companies-list' %}"> Cancelar</a>
+                    <button type="submit" form="checkform" class="btn btn-primary"> Guardar </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ form.media.js }}
+</body>
+
+<script>
+    $(document).on('focus', '.select2-selection', function () {
+        $(this).closest('.select2-container').prev('select').select2('open');
+    });
+    $(document).ready(function () {
+        $('input[type="text"]:visible:first').focus();
+    });
+</script>
+
+<style>
+    .color-radio {
+        display: none;
+    }
+
+    .color-box {
+        font-size: 0;
+        line-height: 0;
+        color: transparent;
+
+        width: 45px;
+        height: 30px;
+        display: inline-block;
+        position: relative;
+        /* Needed for absolute positioning of the icon */
+        border: 2px solid #ddd;
+        border-radius: 7px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .bg-red {
+        background-color: red;
+    }
+
+    .bg-green {
+        background-color: green;
+    }
+
+    .bg-yellow {
+        background-color: yellow;
+    }
+
+    /* Highlight when the hidden radio is checked */
+    input:checked+.color-box::after {
+        content: '\2713';
+        /* Unicode Checkmark */
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 18px;
+        height: 18px;
+        background-color: white;
+        /* Contrast background for the icon */
+        color: black;
+        font-size: 12px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #000;
+        border-radius: 50%;
+        /* Makes it a circular badge */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input:checked+.color-box {
+        border-color: #333;
+        transform: scale(1.05);
+    }
+
+    .select2-container .select2-selection--single {
+        height: 38px;
+        padding-top: 6px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        top: 6px;
+    }
+</style>
+{% endblock %}

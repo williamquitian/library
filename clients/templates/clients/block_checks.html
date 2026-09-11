@@ -1,0 +1,83 @@
+<a class="btn btn-success bt-sm" href="{% url 'new_check' client.id %}">
+    <i class="bi bi-credit-card-2-front"></i> Nuevo cheque
+</a>
+<br>
+<br>
+<table class="table table-hover table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th scope="col">Valor</th>
+            <th scope="col">Número</th>
+            <th scope="col">Empresa</th>
+            <th scope="col">Girador</th>
+            <th scope="col">Contacto</th>
+            <th scope="col">Teléfono</th>
+            <th scope="col">Fecha</th>
+            <th scope="col">Creado por</th>
+            <th scope="col"></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ch in client.checks.all|dictsortreversed:"created_at" %}
+        <tr>
+            <td>${{ ch.amount | floatformat:-2 }}</td>
+            <td>{{ ch.check_number }}</td>
+            <td>{{ ch.broker }}</td>
+            <td>{{ ch.company }}</td>
+            <td>{{ ch.manager|default_if_none:"" }}</td>
+            <td>{{ ch.manager.phone }}</td>
+            <td>{{ ch.created_at | date:"m/d/Y h:i a" }}</td>
+            <td>{{ ch.author }}</td>
+            <td align="center">
+                {% if ch.allow_delete and request.user == ch.author %}
+                <a href="{% url 'update_check' ch.id %}"" class=" btn btn-warning btn-sm" title="Modificar cheque">
+                    <i class="bi bi-pencil-fill"></i>
+                </a>
+                <a href="#" class="btn btn-danger btn-sm" title="Eliminar cheque" data-bs-toggle="modal"
+                    data-bs-target="#confirmationModalCheck" data-action-url="{% url 'delete_check' ch.id %}"
+                    data-company="{{ ch.company }}" data-amount="{{ ch.amount }}"
+                    data-check_number="{{ ch.check_number }}">
+                    <i class="bi bi-trash"></i>
+                </a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8">Cliente sin cheques grabados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="modal fade" id="confirmationModalCheck" tabindex="-1" aria-labelledby="confirmationModalCheckLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmationModalLabel">Confirmar eliminación </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Esta seguro que quiere eliminar el cheque <strong id="modal-check_number"></strong> por valor de<br> 
+        <strong id="modal-amount"></strong> y girador <strong id="modal-company"></strong>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <a href="#" id="confirmActionLink" class="btn btn-primary">Confirmar</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    $('#confirmationModalCheck').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); 
+        var modal = $(this);
+        modal.find('#modal-check_number').text('#' + button.data('check_number'));
+        modal.find('#modal-amount').text('$' + button.data('amount'));
+        modal.find('#modal-company').text(button.data('company'));
+        modal.find('#confirmActionLink').attr('href', button.data('action-url'));
+    });
+});
+</script>

@@ -1,0 +1,21 @@
+{% extends 'accounts/base.html' %}
+{% load crispy_forms_tags %}
+{% load custom_filters %}
+
+{% block content %}
+{{ date_form.media }}{{ month_form.media }}
+
+<div class="row align-items-center mb-3">
+  <div class="col">
+    <h4 class="d-inline">{% block balance_title %}Balance de caja{% endblock %}</h4>
+    {% if target_user %}<span class="text-muted ms-2">· {{ target_user }}</span>{% endif %}
+  </div>
+  <div class="col-auto text-muted">
+    {% block balance_subtitle %}{{ date|date:"l, d F Y" }}{% endblock %}
+  </div>
+</div>
+
+{% block balance_filter %}{% endblock %}
+{% block balance_content %}{% endblock %}
+
+{% endblock %}

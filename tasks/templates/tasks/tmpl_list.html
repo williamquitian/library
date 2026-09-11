@@ -1,0 +1,121 @@
+{% extends 'accounts/base.html' %}
+{% block content %}
+<div class="row">
+    <div class="col">
+        <h2 style="display:inline">Tareas</h2>
+    </div>
+    <div class="col-auto">
+        <a class="btn btn-success bt-sm" href="{% url 'tasks-create' %}">
+            <i class="bi bi-list-stars"></i> Nueva Tarea
+        </a>
+
+    </div>
+</div>
+<hr>
+<table class="table table-hover table-bordered table-sm" id="table-tasks">
+    <thead class="table-light">
+        <tr>
+            <th class="dt-head-center" data-dt-order="disable">Número</th>
+            <th class="dt-head-center" data-dt-order="disable">Estado</th>
+            <th class="dt-head-center" data-dt-order="disable">Prioridad</th>
+            <th class="dt-head-center" data-dt-order="disable">Tipo</th>
+            <th class="dt-head-center" data-dt-order="disable">Cliente</th>
+            <th class="dt-head-center" data-dt-order="disable">Asignado</th>
+            <th class="dt-head-center">Vencimiento</th>
+            <th class="dt-head-center" data-dt-order="disable">Descripción</th>
+        </tr>
+        <tr id="row_filters" style="display:none;">
+            <th data-dt-order="disable" style="padding: 1px 1px;">
+                <input class="form-control form-control-sm" name="task">
+            </th>
+            <th data-dt-order="disable" style="padding: 1px 1px;">{{ form.status }}</th>
+            <th data-dt-order="disable" style="padding: 1px 1px;">{{ form.priority }}</th>
+            <th data-dt-order="disable" style="padding: 1px 1px;">{{ form.task_type }}</th>
+            <th data-dt-order="disable" style="padding: 1px 1px;">
+                <input class="form-control form-control-sm" name="client">
+            </th>
+            <th data-dt-order="disable" style="padding: 1px 1px;">{{ form.assigned_to }}</th>
+            <th data-dt-order="disable" style="padding: 1px 1px;"></th>
+            <th data-dt-order="disable" style="padding: 1px 1px;"></th>
+        </tr>
+    </thead>
+</table>
+<script>
+    var table = new DataTable('#table-tasks', {
+        ajax: {
+            url: "{% url 'tasks-list-ajax' %}",
+            type: 'POST',
+            data: function (d) {
+                d.csrfmiddlewaretoken = "{{ csrf_token }}"
+                $('#row_filters th :input').each(function (index) {
+                    d[$(this).attr('name')] = $(this).val();
+                });
+            }
+        },
+        searching: false,
+        responsive: true,
+        processing: true,
+        serverSide: true,
+        order: [[6, 'asc']],
+        columns: [
+            {
+                data: 'id', "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
+                    $(nTd).html("<a href='/tasks/detail/" + oData.id + "'>" + oData.link + "</a>");
+                }
+            },
+            { data: 'status' },
+            { data: 'priority' },
+            { data: 'task_type' },
+            { data: 'client' },
+            { data: 'assigned_to' },
+            { data: 'due_date' },
+            { data: 'description' },
+        ],
+        rowCallback: function (row, data) {
+            if (data.status == 'Completado') {
+                $(row).addClass('table-success');
+            } else if (data.is_past_due) {
+                $(row).addClass('table-danger');
+            } else if (data.priority == 'Alta') {
+                $(row).addClass('table-warning');
+            }
+        },
+        language: {
+            info: 'Mostrando del _START_ al _END_ de _TOTAL_ tareas',
+            infoEmpty: 'No hay tareas grabadas',
+            infoFiltered: '(filtrados de un total de _MAX_ tareas)',
+            emptyTable: 'No hay tareas grabadas'
+        },
+        layout: {
+            topStart: {
+                info: {}
+            },
+            bottomStart: {
+                pageLength: {
+                    menu: [10, 25, 50],
+                    text: 'Mostar _MENU_ registros por página'
+                }
+            }
+        }
+    });
+
+    $(document).ready(function () {
+        $('#table-tasks #row_filters th').each(function (i) {
+            $('input', this).on('keyup change', function (ev) {
+                if (table.column(i).search() !== this.value && (ev.keyCode == 13 || ev.keyCode == 8)) {
+                    table.column(i).search(this.value).draw();
+                }
+            });
+        });
+        $('#table-tasks #row_filters th').each(function (i) {
+            $('select', this).on('change', function (ev) {
+                table.column(i).search(this.value).draw();
+            });
+        });
+    });
+
+    $('#table-tasks').on('draw.dt', function () {
+        setTimeout(function () { $("#row_filters").show(); }, 100);
+    });
+</script>
+{% endblock %}

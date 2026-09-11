@@ -1,0 +1,238 @@
+{% extends 'accounts/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<body>
+    {{ check_form.media.css }}
+    <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'clients-list'%}">Clientes</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'view_client' client.id 'checks'%}">{{client}}</a></li>
+            <li class="breadcrumb-item active">
+                {% if check_form.instance.pk %}
+                Cheque # {{check_form.instance.check_number}}
+                {% else %}
+                Nuevo Cheque
+                {% endif %}
+            </li>
+        </ol>
+    </nav>
+    <div class="row">
+        <div class="col-sm-10 offset-md-1">
+            <div class="card">
+                <h5 class="card-header">
+                    {% if check_form.instance.pk %}
+                    Modificar cheque # {{check_form.instance.check_number}}
+                    {% else %}
+                    Nuevo Cheque
+                    {% endif %}
+                </h5>
+                {{ check_form.media }}
+                <div class="card-body">
+                    <form method="post" id="checkform" class="row g-3" novalidate>
+                        {% csrf_token %}
+                        <div class="col-md-3"> {{ check_form.amount|as_crispy_field }} </div>
+                        <div class="col-md-2"> {{ check_form.comm_percent|as_crispy_field }} </div>
+                        <div class="col-md-3"> {{ check_form.check_number|as_crispy_field }} </div>
+                        <div class="col-md-4"> {{ check_form.broker|as_crispy_field }} </div>
+                        <div class="col-md-5"> {{ check_form.company|as_crispy_field }} </div>
+                        <div class="col-md-4"> {{ check_form.manager|as_crispy_field }} </div>
+                        <div class="col-md-3"> {{ manager_form.phone|as_crispy_field }} </div>
+                    </form>
+                </div>
+                
+                 <!-- Footer info -->
+        <div id="resultFooter" class="alert alert-info d-none">
+            <strong>Comisión (<span id="comm_percent"></span>%):</strong> $<span id="commission"></span><br>
+            <strong>Valor a pagar:</strong> $<span id="finalAmount"></span>
+        </div>
+                <div class="card-footer text-end">
+                    <a class="btn btn-outline-danger" href="{% url 'view_client' client.id 'checks' %}"> Cancelar
+                    </a>
+                    <button type="submit" form="checkform" class="btn btn-primary"> Guardar </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-sm-10 offset-md-1" id="company-info">
+        </div>
+    </div>
+
+    {{ check_form.media.js }}
+</body>
+<style>
+    .select2-container .select2-selection--single {
+        height: 38px;
+        padding-top: 6px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        top: 6px;
+    }
+</style>
+<script>
+    $(document).ready(function () {
+        function formatOptionWithIcon(option) {
+            if (!option.id) {
+                return option.text; // Return the text if no ID (e.g., placeholder)
+            }
+
+            let icon = '';
+
+            if (!parseInt(option.id) > 0) {
+                icon = '<i class="bi bi-plus-circle"></i> ';
+            }
+
+            return $('<span>' + icon + option.text.toUpperCase() + '</span>');
+        }
+
+        $('#id_company').select2({
+            templateResult: formatOptionWithIcon,
+        });
+
+        $('#id_manager').select2({
+            templateResult: formatOptionWithIcon,
+        });
+
+        $('#div_id_company').find('.select2-selection').focus(function () {
+            $('#id_company').select2('open');
+        });
+        $('#div_id_manager').find('.select2-selection').focus(function () {
+            $('#id_manager').select2('open');
+        });
+        $('#div_id_manager').on('select2:select', function (e) {
+            var data = e.params.data;
+
+            if (!parseInt(data.id) > 0) {
+                $('#id_phone').val("");
+                return;
+            }
+
+            $.ajax({
+                url: "{% url 'get_manager_phone' %}", // URL to your Django view
+                type: 'GET', // Or 'POST' depending on your needs
+                data: { 'id': data.id }, // Data to send to Django
+                success: function (data) {
+                    $('#id_phone').val(data.phone);
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX error:", status, error);
+                }
+            });
+        });
+        $('#div_id_company').on('select2:select', function (e) {
+            var data = e.params.data;
+
+            if (!parseInt(data.id)) {
+                $('#company-info').html('');
+                return;
+            }
+
+            $.ajax({
+                url: "{% url 'company_ajax' %}",
+                data: {
+                    id: data.id
+                },
+                success: function (data) {
+                    let cardColor=""
+                    let badge=""
+                    switch (data.color) {
+                        case "green":
+                            cardColor="bg-success"
+                            badge='<span class="badge bg-success">Verde</span>'
+                        break;
+                    case "yellow":
+                        cardColor="bg-warning"
+                        badge='<span class="badge bg-warning text-dark">Amarillo</span>'
+                        break;
+                         case "red":
+                        cardColor="bg-danger"
+                        badge='<span class="badge bg-danger">Rojo</span>'
+                        break;
+                    }
+
+                    let checksHtml = "";
+
+                    if (data.checks && data.checks.length > 0) {                        
+                        $('#id_manager').val(data.checks.at(0).id_manager).trigger('change');
+                        $('#id_phone').val(data.checks.at(0).phone);
+
+                        checksHtml = `
+                            <div class="mt-3">
+                                <h6>Historial de cheques</h6>
+                                <table class="table table-bordered table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Número de cheque</th>
+                                            <th>Valor</th>
+                                            <th>Pagador</th>
+                                            <th>Fecha</th>
+                                            <th>Usuario</th>
+                                            <th>Manager</th>
+                                            <th>Teléfono</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${data.checks.map(check => `
+                                            <tr>
+                                                <td>${check.check_number}</td>
+                                                <td>$${check.amount}</td>
+                                                <td>${check.broker}</td>
+                                                <td>${check.created_at}</td>
+                                                <td>${check.author}</td>
+                                                <td>${check.manager}</td>
+                                                <td>${check.phone}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    }
+
+                    $('#company-info').html(`
+                        <div class="card ">
+                            <h5 class="card-header text-white ${cardColor}">${data.name}</h5>
+                            <div class="card-body">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>Numero de cuenta: </th><td>${data.account_number}</td>
+                                        <th>Ciudad: </th><td>${data.city}</td>
+                                        <th>Color: </th><td>${badge}</td>
+                                    </tr>
+                                    <tr><th>Commentarios: </th><td colspan=5>${data.comment}</td></tr>
+                                </table>
+                                ${checksHtml}
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+        });
+        $('#id_amount').focus();
+    });
+
+    $(document).on('keyup', '.select2-search__field', function () {
+        this.value = this.value.toUpperCase();
+    });
+
+    $('#id_amount, #id_comm_percent').on('focusout', function () {
+        let amount = parseFloat($("#id_amount").val());
+
+        if (!isNaN(amount)) {
+            let rawCommission = (amount * $('#id_comm_percent').val()) / 100;
+            let finalAmount = Math.floor(amount - rawCommission);
+            let commission = amount - finalAmount;
+         
+            $('#commission').text(commission.toFixed(2));
+            $('#comm_percent').text($('#id_comm_percent').val());
+            $('#finalAmount').text(finalAmount);
+            $('#resultFooter').removeClass('d-none');
+        } else {
+            $('#resultFooter').addClass('d-none');
+        }
+    });
+</script>
+{% endblock %}

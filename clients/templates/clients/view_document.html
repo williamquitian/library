@@ -1,0 +1,12 @@
+
+<div class="modal-header">
+    <h5 class="modal-title"> {{doc.get_document_type_display}}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  </div>
+  <div class="modal-body ratio ratio-16x9">
+    {% if doc.ext == 'pdf' %}
+      <embed src="{{ doc.name.url }}"  class="container-fluid img-fluid"></embed>
+    {% else %}
+      <img src="{{ doc.name.url }}" class="img-fluid" style="padding: 20px;">
+    {% endif %}
+  </div>

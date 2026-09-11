@@ -1,0 +1,61 @@
+{% extends 'accounts//base.html' %}
+{% block content %}
+
+<div class="row">
+    <div class="col">
+        <h2 style="display:inline">Usuarios de Unimex CRM</h2>
+    </div>
+    <div class="col-auto">
+        <a class="btn btn-success bt-sm" href="{% url 'accounts-new' %}">
+            <i class="bi bi-plus-circle"></i> Crear nuevo usuario
+        </a>
+    </div>
+</div>
+<hr>
+
+<table id="clients_table" class="table table-hover table-bordered">
+    <thead class="table-light">
+        <tr>
+            <th>Username</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Activo</th>
+            <th>Admin</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for u in users %}
+        <tr>
+            <td><a href="{% url 'accounts-update' u.id %}"> {{ u.username }} </a></td>
+            <td>{{ u.first_name }} {{ u.last_name }}</td>
+            <td>{{ u.email }}</td>
+            <td> {% if u.is_active %} Si {% else %} No {% endif %}</td>
+            <td> {% if u.is_superuser %} Si {% else %} No {% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<br>
+<script>
+    /*new DataTable('#clients_table', {
+        layout: {
+            topStart: {
+                info: {
+                    text: 'Mostrando del _START_ al _END_ de _TOTAL_ clientes'
+                }
+            },
+            bottomStart: {
+                pageLength: {
+                    menu: [10, 25, 50],
+                    text: 'Mostar _MENU_ registros por página'
+                }
+            }
+        },
+        language: {
+            infoEmpty: 'No hay clientes creados',
+            infoFiltered: '(filtrados de _MAX_ clientes totales)',
+            zeroRecords: 'Cliente no encontrado'
+        }
+    });*/
+</script>
+{% endblock %}

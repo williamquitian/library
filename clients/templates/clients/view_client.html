@@ -1,0 +1,111 @@
+{% extends 'accounts/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '>';">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'clients-list'%}">Clientes</a></li>
+    <li class="breadcrumb-item active">{{client}}</li>
+  </ol>
+</nav>
+
+<div class="card">
+  <div class="card-header">
+    <h5 class="card-title">{{ client }}</h5>
+    <ul class="nav nav-tabs card-header-tabs" data-bs-tabs="tabs">
+      <li class="nav-item">
+        <a class="nav-link {% if tab == 'details' %} active {% endif %}" aria-current="true" data-bs-toggle="tab" href="#details">Información</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if tab == 'documents' %} active {% endif %}" data-bs-toggle="tab" href="#documents">
+          Documentos <span class="badge text-bg-primary rounded-pill">{{ documents|length }}</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if tab == 'packages' %} active {% endif %}" data-bs-toggle="tab" href="#packages">
+          Envíos <span class="badge text-bg-primary rounded-pill">{{ sendmoney.count|add:sendpackage.count }}</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if tab == 'checks' %} active {% endif %}" data-bs-toggle="tab" href="#checks">
+          Cheques <span class="badge text-bg-primary rounded-pill">{{ client.checks.count }}</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if tab == 'moneyorders' %} active {% endif %}" data-bs-toggle="tab" href="#moneyorders">
+          Money orders <span class="badge text-bg-primary rounded-pill">{{ moneyorder|length }}</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {% if tab == 'cards' %} active {% endif %}" data-bs-toggle="tab" href="#cards">
+          Tarjetas fidelización <span class="badge text-bg-primary rounded-pill">{{fidelitycards|length }}</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="card-body tab-content">
+    <div class="tab-pane {% if tab == 'details' %} active {% endif %}" id="details">
+      {% include 'clients/block_details.html' %}
+    </div>
+    <div class="tab-pane {% if tab == 'documents' %} active {% endif %}" id="documents">
+      {% include 'clients/block_documents.html' %}
+    </div>
+    <div class="tab-pane {% if tab == 'packages' %} active {% endif %}" id="packages">
+      {% include 'clients/block_transfer&package.html' %}
+    </div>
+    <div class="tab-pane {% if tab == 'cards' %} active {% endif %}" id="cards">
+      {% include 'clients/block_cards.html' %}
+    </div>
+    <div class="tab-pane {% if tab == 'moneyorders' %} active {% endif %}" id="moneyorders">
+      {% include 'clients/block_moneyorders.html' %}
+    </div>
+    <div class="tab-pane {% if tab == 'checks' %} active {% endif %}" id="checks">
+      {% include 'clients/block_checks.html' %}
+    </div>
+  </div>
+</div>
+<br>
+
+<div class="row">
+  <div class="col">
+    <div class="card card-header">
+      <h5 class="card-title">
+        Comentarios <span class="badge text-bg-primary rounded-pill">{{ comments|length }}</span>
+      </h5>
+    </div>
+    <table class="table table-bordered">
+      <tbody>
+        {% if not comments %}
+        <tr>
+          <td scope="col">No hay cometarios.</td>
+        </tr>
+        {% endif %}
+        {% for comm in comments %}
+        <tr class="table-light">
+          <th>
+            <div class="row">
+              <div class="col">{{ comm.author }}</div>
+              <small class="col text-end text-body-secondary">{{ comm.created_at }}</small>
+            </div>
+          </th>
+        </tr>
+        <tr>
+          <td>{{ comm.content }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="table-light">
+          <td scope="col">
+            <form method="post" action="{% url 'add_comment' client.id tab %}">
+              {% csrf_token %}
+              {{ comment_form|crispy }}
+              <div class="col text-end">
+                <button type="submit" class="btn btn-primary">Agregar commentario</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

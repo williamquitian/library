@@ -1,0 +1,41 @@
+{% load custom_filters %}
+<div class="col">
+  <div class="card h-100 border-primary shadow-sm">
+    <div class="card-header py-1 bg-primary text-white">
+      <strong class="text-uppercase small">Total</strong>
+    </div>
+    <table class="table table-sm mb-0 small">
+      <tbody>
+        <tr><td>Balance inicial</td><td class="text-end">{{ total.initial|currency|default_if_none:"$0.00" }}</td></tr>
+        {% if total.manual_movement %}
+        <tr><td>Movimiento del día</td><td class="text-end">{{ total.manual_movement|currency|default_if_none:"$0.00" }}</td></tr>
+        {% endif %}
+        <tr><td>Envíos en efectivo</td><td class="text-end">{{ total.send_money_cash|currency|default_if_none:"$0.00" }}</td></tr>
+        <tr><td>Money orders</td><td class="text-end">{{ total.money_order|currency|default_if_none:"$0.00" }}</td></tr>
+        <tr><td>Cheques</td><td class="text-end">{{ total.checks|currency|default_if_none:"$0.00" }}</td></tr>
+        <tr><td>Salidas / depósitos</td><td class="text-end">{{ total.outflows|currency|default_if_none:"$0.00" }}</td></tr>
+        {% if total.inflows %}
+        <tr><td>Recibido en traslados</td><td class="text-end">{{ total.inflows|currency|default_if_none:"$0.00" }}</td></tr>
+        {% endif %}
+      </tbody>
+      <tfoot class="table-light">
+        <tr><th>Balance final cash</th><th class="text-end">{{ total.final_cash|currency|default_if_none:"$0.00" }}</th></tr>
+        <tr><td>Balance final empresa</td><td class="text-end">{{ total.company_balance|currency|default_if_none:"—" }}</td></tr>
+        <tr class="{% if total.difference and total.difference != 0 %}table-danger{% endif %}">
+          <th>Diferencia</th><th class="text-end">{{ total.difference|currency|default_if_none:"—" }}</th>
+        </tr>
+      </tfoot>
+    </table>
+    {% if total.send_money_cashless %}
+    <div class="card-footer py-1 small text-muted">
+      {% if total.send_money_card %}
+      <div>Envíos con tarjeta: {{ total.send_money_card|currency }}</div>
+      {% endif %}
+      {% if total.send_money_vialink %}
+      <div>Envíos ViaLink: {{ total.send_money_vialink|currency }}</div>
+      {% endif %}
+      <em>No entran en el balance de caja.</em>
+    </div>
+    {% endif %}
+  </div>
+</div>
