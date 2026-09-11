@@ -12,7 +12,7 @@ local_settings.py
 __pycache__/
 
 # Database (Do not push your local database)
-*.sqlite3
+#*.sqlite3
 
 # Media and static deployment files
 /media/
