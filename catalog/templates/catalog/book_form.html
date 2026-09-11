@@ -1,0 +1,60 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page_title }}</title>
+  {# Admin base CSS gives the Select2 widget its expected look. #}
+  <link rel="stylesheet" href="{% static 'admin/css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/forms.css' %}">
+  {# form.media pulls in jQuery, Select2 and admin/js/autocomplete.js. #}
+  {{ form.media }}
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 720px; padding: 0 1rem; }
+    fieldset { border: 1px solid #ddd; border-radius: 6px; padding: 1rem 1.25rem; }
+    p.field { margin: 0 0 1rem; display: grid; gap: .35rem; }
+    label { font-weight: 600; }
+    input[type=text], input[type=date] { padding: .4rem; font-size: 1rem; }
+    .select2-container { max-width: 100%; }
+    button { padding: .5rem 1rem; font-size: 1rem; cursor: pointer; }
+    ul.books { color: #444; }
+    nav { margin-bottom: 1rem; font-size: .9rem; }
+    input.datalist-autocomplete { width: 100%; box-sizing: border-box; }
+    .errorlist { color: #b00; margin: 0; padding-left: 1rem; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="{% url 'catalog:book_create' %}">Add a book</a> &middot;
+    <a href="{% url 'catalog:book_create_dropdown' %}">Compare: stock dropdown</a> &middot;
+    <a href="{% url 'catalog:book_create_datalist' %}">Compare: native datalist</a>
+  </nav>
+  <h1>{{ page_title }}</h1>
+  <p>{{ intro|safe }}</p>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <fieldset>
+      {% for field in form %}
+        <p class="field">
+          {{ field.label_tag }}
+          {{ field }}
+          {% if field.errors %}{{ field.errors }}{% endif %}
+        </p>
+      {% endfor %}
+      <button type="submit">Save book</button>
+    </fieldset>
+  </form>
+
+  <h2>Latest books</h2>
+  <ul class="books">
+    {% for book in books %}
+      <li>{{ book.title }} &mdash; {{ book.author }}{% if book.publisher %} ({{ book.publisher }}){% endif %}</li>
+    {% empty %}
+      <li>No books yet.</li>
+    {% endfor %}
+  </ul>
+
+  <p><a href="/admin/catalog/book/add/">The same autocomplete inside the admin &rarr;</a></p>
+</body>
+</html>
